@@ -114,106 +114,126 @@ class WPUBG_Widget extends WP_Widget {
         //find current season - easier code possible
         $url = "https://api.pubg.com/shards/steam/seasons";
         $result = getData ($url, $apikey);
-        //echo $result;
-        $json = json_decode($result, true);
-        $seasons[] = $json;
-        foreach ($seasons as $season) {
-            foreach ($season as $item) {
-                foreach ($item as $data) {
-                    if ($data['attributes']['isCurrentSeason'] == "1") {
-                        $seasonID = $data['id'];
+        
+        
+        if (!empty($result)) {
+        
+            //echo $result;
+            $json = json_decode($result, true);
+            $seasons[] = $json;
+            foreach ($seasons as $season) {
+                foreach ($season as $item) {
+                    foreach ($item as $data) {
+                        if ($data['attributes']['isCurrentSeason'] == "1") {
+                            $seasonID = $data['id'];
 
-                        break 2;
+                            break 2;
+                        }
                     }
+
                 }
-
             }
+
+            //get player id
+            $url = "https://api.pubg.com/shards/pc-eu/players?filter[playerNames]=".$instance['player'];
+            $result = getData($url, $apikey);
+            //echo "result: ".$result;
+            $json = json_decode($result,true);
+            //print_r ($json);
+            $playerID =  $json['data'][0]['id'];
+            
+
+            //get stats for the player from current season  
+            $url = "https://api.pubg.com/shards/steam/players/".$playerID."/seasons/".$seasonID;
+            $result = getData ($url, $apikey);
+            $json = json_decode($result, true);
+
+            $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
+            $wins = $json['data']['attributes']['gameModeStats'][$gamemode]['wins'];
+            $top10s = $json['data']['attributes']['gameModeStats'][$gamemode]['top10s'];
+            $kills = $json['data']['attributes']['gameModeStats'][$gamemode]['kills'];
+            $headshotKills = $json['data']['attributes']['gameModeStats'][$gamemode]['headshotKills'];
+            $losses = $json['data']['attributes']['gameModeStats'][$gamemode]['losses'];
+            $roundMostKills = $json['data']['attributes']['gameModeStats'][$gamemode]['roundMostKills'];
+            $roundsPlayed = $json['data']['attributes']['gameModeStats'][$gamemode]['roundsPlayed'];
+            $rank = getRank($rankPoints);
+            
+            //open widget div
+            echo '<div class="widget-text wp_widget_plugin_box">';
+            
+            //show widget title
+            if ( $title ) {
+                echo $before_title . $title . $after_title;
+            }
+            
+            //here goes the beatuy stuff
+            $mode = array (
+                    'solo' => 'Solo',
+                    'solo-fpp' => 'Solo FPP',
+                    'duo' => 'Duo',
+                    'duo-fpp' => 'Duo FPP',
+                    'suqad' => 'Suqad',
+                    'squad-fpp' => 'Squad FPP',
+            );
+            echo '
+                <div style="background-color:#FFBF00; padding:10px;">
+                    <div style="float:left;"><strong>'.$mode[$gamemode].'</strong></div>
+                    <div style="float:right;">'.$roundsPlayed.' Games</div>
+                    <div style="clear:both;"></div>
+                </div>
+                <div style="text-align:center;">
+                    <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
+                    <img src="'.plugin_dir_url(__FILE__).'/gfx/'.strtolower($rank).'.png" width="120">
+                    <p style="padding:5px;"><strong>'.$rank.'</strong></p>
+                </div>
+                <table>
+                    <tr>
+                        <th>Points: </th><td>'.$rankPoints.'</td>
+                    </tr>
+                    <tr>
+                        <th>Rounds won: </th><td>'.$wins.'</td>
+                    </tr>
+                    <tr>
+                        <th>Rounds Top10: </th><td>'.$top10s.'</td>
+                    </tr>
+                    <tr>
+                        <th>Kills: </th><td>'.$kills.'</td>
+                    </tr>
+                    <tr>
+                        <th>Most kills per Round: </th><td>'.$roundMostKills.'</td>
+                    </tr>
+                </table>
+            ';
+
+
+            /*echo "Player ID is: ".$player."<br>";
+            echo "API-URL is: ".$url;
+            echo "<br>RankPoints for Squad-FPP are: ".$rankPoints."<br>";
+            echo "Your rank is: ".getRank($rankPoints);*/
+            
+            
+            //close widget div
+            echo '</div>';
+            
+            // WordPress core after_widget hook (always include )
+            echo $after_widget;
+        } else {
+            //open widget div
+            echo '<div class="widget-text wp_widget_plugin_box">';
+            
+            //show widget title
+            if ( $title ) {
+                echo $before_title . $title . $after_title;
+            }
+
+            echo "<h3>Whoops!</h3><strong>Could not connect API</strong>";
+
+            //close widget div
+            echo '</div>';
+            
+            // WordPress core after_widget hook (always include )
+            echo $after_widget;
         }
-
-        //get player id
-        $url = "https://api.pubg.com/shards/pc-eu/players?filter[playerNames]=".$instance['player'];
-        $result = getData($url, $apikey);
-        //echo "result: ".$result;
-        $json = json_decode($result,true);
-        //print_r ($json);
-        $playerID =  $json['data'][0]['id'];
-        
-
-        //get stats for the player from current season  
-        $url = "https://api.pubg.com/shards/steam/players/".$playerID."/seasons/".$seasonID;
-        $result = getData ($url, $apikey);
-        $json = json_decode($result, true);
-
-        $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
-        $wins = $json['data']['attributes']['gameModeStats'][$gamemode]['wins'];
-        $top10s = $json['data']['attributes']['gameModeStats'][$gamemode]['top10s'];
-        $kills = $json['data']['attributes']['gameModeStats'][$gamemode]['kills'];
-        $headshotKills = $json['data']['attributes']['gameModeStats'][$gamemode]['headshotKills'];
-        $losses = $json['data']['attributes']['gameModeStats'][$gamemode]['losses'];
-        $roundMostKills = $json['data']['attributes']['gameModeStats'][$gamemode]['roundMostKills'];
-        $roundsPlayed = $json['data']['attributes']['gameModeStats'][$gamemode]['roundsPlayed'];
-        $rank = getRank($rankPoints);
-        
-        //open widget div
-        echo '<div class="widget-text wp_widget_plugin_box">';
-        
-        //show widget title
-		if ( $title ) {
-			echo $before_title . $title . $after_title;
-        }
-        
-        //here goes the beatuy stuff
-        $mode = array (
-                'solo' => 'Solo',
-                'solo-fpp' => 'Solo FPP',
-                'duo' => 'Duo',
-                'duo-fpp' => 'Duo FPP',
-                'suqad' => 'Suqad',
-                'squad-fpp' => 'Squad FPP',
-        );
-        echo '
-            <div style="background-color:#FFBF00; padding:10px;">
-                <div style="float:left;"><strong>'.$mode[$gamemode].'</strong></div>
-                <div style="float:right;">'.$roundsPlayed.' Games</div>
-                <div style="clear:both;"></div>
-            </div>
-            <div style="text-align:center;">
-                <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
-                <img src="'.plugin_dir_url(__FILE__).'/gfx/'.strtolower($rank).'.png" width="120">
-                <p style="padding:5px;"><strong>'.$rank.'</strong></p>
-            </div>
-            <table>
-                <tr>
-                    <th>Points: </th><td>'.$rankPoints.'</td>
-                </tr>
-                <tr>
-                    <th>Rounds won: </th><td>'.$wins.'</td>
-                </tr>
-                <tr>
-                    <th>Rounds Top10: </th><td>'.$top10s.'</td>
-                </tr>
-                <tr>
-                    <th>Kills: </th><td>'.$kills.'</td>
-                </tr>
-                <tr>
-                    <th>Most kills per Round: </th><td>'.$roundMostKills.'</td>
-                </tr>
-            </table>
-        ';
-
-
-        /*echo "Player ID is: ".$player."<br>";
-        echo "API-URL is: ".$url;
-        echo "<br>RankPoints for Squad-FPP are: ".$rankPoints."<br>";
-        echo "Your rank is: ".getRank($rankPoints);*/
-        
-        
-        //close widget div
-        echo '</div>';
-        
-        // WordPress core after_widget hook (always include )
-        echo $after_widget;
-        
 
         
     }
