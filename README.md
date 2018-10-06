@@ -19,3 +19,4 @@ WPUBG is a plugin for Wordpress which contacts the PUBG-API to get some basic st
 * no error catching yet
 * PUBG-API only allows 10 requests per minute as a default (you can request higher amounts on https://developer.pubg.com)
 * no caching yet
+* not able to choose region
