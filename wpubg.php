@@ -1,12 +1,12 @@
 <?php
 /*
 Plugin Name: WPUBG
-Plugin URI: https://janbpunkt.de
+Plugin URI: https://janbpunkt.de/wpubg
 Description: Display your PUBG stats of the current season as a widget.
 Version: 0.1
 Author: Jan B-Punkt
 Author URI: https://janbpunkt.de
-License: none
+License: GNU General Public License v3.0
 */
 
 
@@ -156,6 +156,11 @@ class WPUBG_Widget extends WP_Widget {
             $losses = $json['data']['attributes']['gameModeStats'][$gamemode]['losses'];
             $roundMostKills = $json['data']['attributes']['gameModeStats'][$gamemode]['roundMostKills'];
             $roundsPlayed = $json['data']['attributes']['gameModeStats'][$gamemode]['roundsPlayed'];
+
+            $winRatio = round($wins/$roundsPlayed*100,2);
+            $top10sRatio = round($top10s/$roundsPlayed*100,2);
+            $headshotRatio = round($headshotKills/$kills*100,2);
+            $kdRatio = round($kills/$losses,2);
             $rank = getRank($rankPoints);
             
             //open widget div
@@ -191,13 +196,16 @@ class WPUBG_Widget extends WP_Widget {
                         <th>Points: </th><td>'.$rankPoints.'</td>
                     </tr>
                     <tr>
-                        <th>Rounds won: </th><td>'.$wins.'</td>
+                        <th>Rounds won: </th><td>'.$wins.' <span style="font-size:0.8em;">('.$winRatio.'%)</span></td>
                     </tr>
                     <tr>
-                        <th>Rounds Top10: </th><td>'.$top10s.'</td>
+                        <th>Rounds Top10: </th><td>'.$top10s.' <span style="font-size:0.8em;">('.$top10sRatio.'%)</span></td>
                     </tr>
                     <tr>
-                        <th>Kills: </th><td>'.$kills.'</td>
+                        <th>Kills: </th><td>'.$kills.' <span style="font-size:0.8em;">(K/D: '.$kdRatio.')</span></td>
+                    </tr>
+                    <tr>
+                        <th>Headshots: </th><td>'.$headshotKills.' <span style="font-size:0.8em;">('.$headshotRatio.'%)</span></td>
                     </tr>
                     <tr>
                         <th>Most kills per Round: </th><td>'.$roundMostKills.'</td>
