@@ -1,8 +1,8 @@
 # WPUBG
-## What it is?
+## What is this thing?
 WPUBG is a plugin for Wordpress which contacts the PUBG-API to get some basic statistics about a player and present those as a widget.
 
-## What you need?
+## What do I need to use it?
 * a working Wordpress installation
 * a working API key from https://developer.pubg.com
 * your player's name
