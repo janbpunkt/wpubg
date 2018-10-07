@@ -1,9 +1,10 @@
-=== Plugin Name ===
+=== Plugin WPUBG===
 Contributors: janbpunkt
 Donate link: https://www.paypal.me/janbeuth
 Tags: pubg, playerunknowns, battlegrounds, statistik, stats, statistics
 Requires at least: 4.6
 Tested up to: 4.9
+Stable tag: trunk
 Requires PHP: 5.2.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,16 +13,16 @@ Display your PUBG stats of the current season as a widget.
 
 
 == Description ==
-WPUBG is a plugin for Wordpress which contacts the PUBG-API to get some basic statistics about a player and present those as a widget.
+WPUBG is a plugin for WordPress which contacts the PUBG-API to get some basic statistics about a player and present those as a widget.
 
 
 == What do you need to use it? ==
-1. a working Wordpress installation
+1. a working WordPress installation
 2. a working API key from https://developer.pubg.com
 3. your player's name
 
 == Installation ==
-1. upload zip to your plugin-folder or isntall it from Wordpress Library
+1. upload zip to your plugin-folder or isntall it from WordPress Library
 2. activate the plugin
 3. go to the widgets area and place the widget where you want it to show up
 4. fill out the requiered fields (which are all)
