@@ -11,23 +11,34 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Display your PUBG stats of the current season as a widget.
 
-
 == Description ==
 WPUBG is a plugin for WordPress which contacts the PUBG-API to get some basic statistics about a player and present those as a widget.
+
+== IMPORTANT ==
+This plugin contacts https://api.pubg.com to get the needed data.
+Keep this in mind regarding GDPR/DSGVO.
+
+PUBG API Website
+https://developer.pubg.com
+
+PUBG API Privacy Policy
+https://developer.pubg.com/privacy_policy
+
+PUBG API TOS
+https://developer.pubg.com/tos?locale=en
 
 
 == What do you need to use it? ==
 1. a working WordPress installation
 2. a working API key from https://developer.pubg.com
-3. your player's name
+3. your player's ingame name
 
 == Installation ==
-1. upload zip to your plugin-folder or isntall it from WordPress Library
+1. upload zip to your plugin-folder or install it from the WordPress Library
 2. activate the plugin
 3. go to the widgets area and place the widget where you want it to show up
-4. fill out the requiered fields (which are all)
+4. fill out all fields
 5. save
-
 
 == Known issues == 
 1. no error catching yet
