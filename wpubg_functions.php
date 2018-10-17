@@ -1,18 +1,18 @@
 <?php
-//some functionality
-function getData ($url, $apikey) {
-    $curl = $url;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: ' . $apikey, 'Accept: application/vnd.api+json'));
-    curl_setopt($ch, CURLOPT_URL,$url);
-    $result=curl_exec($ch);
-    curl_close($ch);
+function wpubg_getData ($url, $apikey) {
+    $params = array(
+		'sslverify' => false, 
+        'headers' => array(
+            'Authorization' => $apikey,
+			'Accept' => 'application/json'
+            )
+		);
+	$response = wp_remote_get($url, $params);
+	$result = wp_remote_retrieve_body($response);
     return $result;
 }
 
-function getRank ($points) {
+function wpubg_getRank ($points) {
     if ($points == 0) {
         $rank = "Unranked";
     } else if ($points > 0 && $points < 1399) {
