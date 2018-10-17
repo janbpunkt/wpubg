@@ -113,9 +113,8 @@ class WPUBG_Widget extends WP_Widget {
         
         //find current season - easier code possible
         $url = "https://api.pubg.com/shards/steam/seasons";
-        $result = getData ($url, $apikey);
-        
-        
+        $result = wpubg_getData ($url, $apikey);
+      
         if (!empty($result)) {
         
             //echo $result;
@@ -136,7 +135,7 @@ class WPUBG_Widget extends WP_Widget {
 
             //get player id
             $url = "https://api.pubg.com/shards/pc-eu/players?filter[playerNames]=".$instance['player'];
-            $result = getData($url, $apikey);
+            $result = wpubg_getData($url, $apikey);
             //echo "result: ".$result;
             $json = json_decode($result,true);
             //print_r ($json);
@@ -145,7 +144,7 @@ class WPUBG_Widget extends WP_Widget {
 
             //get stats for the player from current season  
             $url = "https://api.pubg.com/shards/steam/players/".$playerID."/seasons/".$seasonID;
-            $result = getData ($url, $apikey);
+            $result = wpubg_getData ($url, $apikey);
             $json = json_decode($result, true);
 
             $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
@@ -161,7 +160,7 @@ class WPUBG_Widget extends WP_Widget {
             $top10sRatio = round($top10s/$roundsPlayed*100,2);
             $headshotRatio = round($headshotKills/$kills*100,2);
             $kdRatio = round($kills/$losses,2);
-            $rank = getRank($rankPoints);
+            $rank = wpubg_getRank($rankPoints);
             
             //open widget div
             echo '<div class="widget-text wp_widget_plugin_box">';
@@ -234,7 +233,7 @@ class WPUBG_Widget extends WP_Widget {
                 echo $before_title . $title . $after_title;
             }
 
-            echo "<h3>Whoops!</h3><strong>Could not connect API</strong>";
+            echo "<h3>Whoops!</h3><strong>Could not connect to API</strong>";
 
             //close widget div
             echo '</div>';
@@ -248,7 +247,7 @@ class WPUBG_Widget extends WP_Widget {
 }
 
 // Register the widget
-function my_register_custom_widget() {
+function wpubg_registerWidget() {
 	register_widget( 'WPUBG_Widget' );
 }
-add_action( 'widgets_init', 'my_register_custom_widget' );
+add_action( 'widgets_init', 'wpubg_registerWidget' );
