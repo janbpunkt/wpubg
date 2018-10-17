@@ -1,22 +1,35 @@
 # WPUBG
 ## What is this thing?
-WPUBG is a plugin for Wordpress which contacts the PUBG-API to get some basic statistics about a player and present those as a widget.
+WPUBG is a plugin for WordPress which contacts the PUBG-API to get some basic statistics about a player and present those as a widget.
+
+# IMPORTANT
+This plugin contacts https://api.pubg.com to get the needed data.
+Keep this in mind regarding GDPR/DSGVO.
+
+PUBG API Website
+https://developer.pubg.com
+
+PUBG API Privacy Policy
+https://developer.pubg.com/privacy_policy
+
+PUBG API TOS
+https://developer.pubg.com/tos?locale=en
 
 ## What do I need to use it?
 * a working Wordpress installation
 * a working API key from https://developer.pubg.com
-* your player's name
+* your player's ingame name
 
 ## Installation
-1. upload zip to your plugin-folder
-2. activate the plugin in your dashboard
-3. got to the widgets area and place the widget where you want it to show up
-4. fill out the requiered fields (which are all)
+1. upload zip to your plugin-folder or install it from the WordPress Library
+2. activate the plugin
+3. go to the widgets area and place the widget where you want it to show up
+4. fill out all fields
 5. save
 6. test
 
-## Known issues
-* no error catching yet
-* PUBG-API only allows 10 requests per minute as a default (you can request higher amounts on https://developer.pubg.com)
-* no caching yet
-* not able to choose region
+## Known issues / to do
+1. no error catching yet
+2. PUBG-API only allows 10 requests per minute as a default (you can request higher amounts on https://developer.pubg.com)
+3. no caching yet
+4. not able to choose region
