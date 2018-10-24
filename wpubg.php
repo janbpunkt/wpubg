@@ -3,7 +3,7 @@
 Plugin Name: WPUBG
 Plugin URI: https://janbpunkt.de/wpubg
 Description: Display your PUBG stats of the current season as a widget.
-Version: 0.4
+Version: 0.41
 Author: Jan B-Punkt
 Author URI: https://janbpunkt.de
 License: GNU General Public License v3.0
@@ -242,7 +242,7 @@ class WPUBG_Widget extends WP_Widget {
                     </div>
                     <div style="text-align:center;">
                         <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
-                        <img src="'.plugin_dir_url(__FILE__).'/gfx/'.strtolower($rank).'.png" width="120">
+                        <img src="'.plugin_dir_url(__FILE__).'gfx/'.strtolower($rank).'.png" width="120">
                         <p style="padding:5px;"><strong>'.$rank.'</strong></p>
                     </div>
                     <table>
