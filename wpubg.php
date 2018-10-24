@@ -3,7 +3,7 @@
 Plugin Name: WPUBG
 Plugin URI: https://janbpunkt.de/wpubg
 Description: Display your PUBG stats of the current season as a widget.
-Version: 0.1
+Version: 0.4
 Author: Jan B-Punkt
 Author URI: https://janbpunkt.de
 License: GNU General Public License v3.0
@@ -32,7 +32,8 @@ class WPUBG_Widget extends WP_Widget {
             'title' => '',
             'player'    => '',
             'apikey' => '',
-            'gamemode' => ''
+            'gamemode' => '',
+            'region' => ''   
         );
         
         // Parse current settings with defaults
@@ -51,8 +52,39 @@ class WPUBG_Widget extends WP_Widget {
         </p>
         <?php // API Key ?>
         <p>
-            <label for="<?php echo esc_attr( $this->get_field_id( 'apikey' ) ); ?>"><?php _e( 'Your PUBG API key', 'text_domain' ); ?></label>
+            <label for="<?php echo esc_attr( $this->get_field_id( 'apikey' ) ); ?>"><?php _e( 'Your PUBG API key', 'text_domain' ); ?></label> <a href="https://developer.playbattlegrounds.com" target="_blank">(Get yours here)</a>
             <input class="widefat" id="<?php echo esc_attr( $this->get_field_id( 'apikey' ) ); ?>" name="<?php echo esc_attr( $this->get_field_name( 'apikey' ) ); ?>" type="text" value="<?php echo esc_attr( $apikey ); ?>" />
+        </p>
+
+
+        <?php // Region ?>
+        <p>
+            <label for="<?php echo $this->get_field_id( 'region' ); ?>"><?php _e( 'Select your region', 'text_domain' ); ?></label>
+            <select name="<?php echo $this->get_field_name( 'region' ); ?>" id="<?php echo $this->get_field_id( 'region' ); ?>" class="widefat">
+            <?php
+            $options = array(
+                ''        => __( 'Select', 'text_domain' ),
+                'pc-eu' => __( 'PC EU', 'text_domain' ),
+                'pc-jp' => __( 'PC JP', 'text_domain' ),
+                'pc-krjp' => __( 'PC KRJP', 'text_domain' ),
+                'pc-kakao' => __( 'PC KaKao', 'text_domain' ),
+                'pc-na' => __( 'PC NA', 'text_domain' ),
+                'pc-oc' => __( 'PC OC', 'text_domain' ),
+                'pc-ru' => __( 'PC RU', 'text_domain' ),
+                'pc-sea' => __( 'PC SEA', 'text_domain' ),
+                'xbox-as' => __( 'XBOX AS', 'text_domain' ),
+                'xbox-eu' => __( 'XBOX EU', 'text_domain' ),
+                'xbox-na' => __( 'XBOX NA', 'text_domain' ),
+                'xbox-oc' => __( 'XBOX OC', 'text_domain' ),
+                'xbox-sa' => __( 'XBOX SA', 'text_domain' )
+            );
+
+            // Loop through options and add each one to the select dropdown
+            foreach ( $options as $key => $name ) {
+                echo '<option value="' . esc_attr( $key ) . '" id="' . esc_attr( $key ) . '" '. selected( $region, $key, false ) . '>'. $name . '</option>';
+
+            } ?>
+            </select>
         </p>
 
         <?php // GameMode ?>
@@ -69,12 +101,12 @@ class WPUBG_Widget extends WP_Widget {
                 'duo' => __( 'Duo', 'text_domain' ),
                 'duo-fpp' => __( 'Duo FPP', 'text_domain' ),
                 'squad' => __( 'Squad', 'text_domain' ),
-                'squad-fpp' => __( 'Suqad FPP', 'text_domain' ),
+                'squad-fpp' => __( 'Squad FPP', 'text_domain' )
             );
 
             // Loop through options and add each one to the select dropdown
             foreach ( $options as $key => $name ) {
-                echo '<option value="' . esc_attr( $key ) . '" id="' . esc_attr( $key ) . '" '. selected( $select, $key, false ) . '>'. $name . '</option>';
+                echo '<option value="' . esc_attr( $key ) . '" id="' . esc_attr( $key ) . '" '. selected( $gamemode, $key, false ) . '>'. $name . '</option>';
 
             } ?>
             </select>
@@ -92,6 +124,7 @@ class WPUBG_Widget extends WP_Widget {
         $instance['player']   = isset( $new_instance['player'] ) ? wp_strip_all_tags( $new_instance['player'] ) : '';
         $instance['apikey']   = isset( $new_instance['apikey'] ) ? wp_strip_all_tags( $new_instance['apikey'] ) : '';
         $instance['gamemode']   = isset( $new_instance['gamemode'] ) ? wp_strip_all_tags( $new_instance['gamemode'] ) : '';
+        $instance['region']   = isset( $new_instance['region'] ) ? wp_strip_all_tags( $new_instance['region'] ) : '';
         return $instance;
     }
 
@@ -104,6 +137,7 @@ class WPUBG_Widget extends WP_Widget {
         $player     = isset( $instance['player'] ) ? $instance['player'] : '';
         $apikey     = isset( $instance['apikey'] ) ? $instance['apikey'] : '';
         $gamemode   = isset( $instance['gamemode'] ) ? $instance['gamemode'] : '';
+        $region   = isset( $instance['region'] ) ? $instance['region'] : '';
     
         // WordPress core before_widget hook (always include )
         echo $before_widget;
@@ -117,7 +151,8 @@ class WPUBG_Widget extends WP_Widget {
       
         if (!empty($result)) {
         
-            //echo $result;
+            //var_dump ($result);
+            
             $json = json_decode($result, true);
             $seasons[] = $json;
             foreach ($seasons as $season) {
@@ -134,96 +169,133 @@ class WPUBG_Widget extends WP_Widget {
             }
 
             //get player id
-            $url = "https://api.pubg.com/shards/pc-eu/players?filter[playerNames]=".$instance['player'];
+            $url = "https://api.pubg.com/shards/".$region."/players?filter[playerNames]=".$instance['player'];
             $result = wpubg_getData($url, $apikey);
-            //echo "result: ".$result;
-            $json = json_decode($result,true);
-            //print_r ($json);
-            $playerID =  $json['data'][0]['id'];
-            
 
-            //get stats for the player from current season  
-            $url = "https://api.pubg.com/shards/steam/players/".$playerID."/seasons/".$seasonID;
-            $result = wpubg_getData ($url, $apikey);
-            $json = json_decode($result, true);
+            if (!empty($result)) {
+                
+                //var_dump($result);
+                
+                $json = json_decode($result,true);
+                //print_r ($json);
+                $playerID =  $json['data'][0]['id'];
+                
 
-            $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
-            $wins = $json['data']['attributes']['gameModeStats'][$gamemode]['wins'];
-            $top10s = $json['data']['attributes']['gameModeStats'][$gamemode]['top10s'];
-            $kills = $json['data']['attributes']['gameModeStats'][$gamemode]['kills'];
-            $headshotKills = $json['data']['attributes']['gameModeStats'][$gamemode]['headshotKills'];
-            $losses = $json['data']['attributes']['gameModeStats'][$gamemode]['losses'];
-            $roundMostKills = $json['data']['attributes']['gameModeStats'][$gamemode]['roundMostKills'];
-            $roundsPlayed = $json['data']['attributes']['gameModeStats'][$gamemode]['roundsPlayed'];
+                //get stats for the player from current season  
+                $url = "https://api.pubg.com/shards/steam/players/".$playerID."/seasons/".$seasonID;
+                $result = wpubg_getData ($url, $apikey);
+                $json = json_decode($result, true);
 
-            $winRatio = round($wins/$roundsPlayed*100,2);
-            $top10sRatio = round($top10s/$roundsPlayed*100,2);
-            $headshotRatio = round($headshotKills/$kills*100,2);
-            $kdRatio = round($kills/$losses,2);
-            $rank = wpubg_getRank($rankPoints);
-            
-            //open widget div
-            echo '<div class="widget-text wp_widget_plugin_box">';
-            
-            //show widget title
-            if ( $title ) {
-                echo $before_title . $title . $after_title;
-            }
-            
-            //here goes the beatuy stuff
-            $mode = array (
-                    'solo' => 'Solo',
-                    'solo-fpp' => 'Solo FPP',
-                    'duo' => 'Duo',
-                    'duo-fpp' => 'Duo FPP',
-                    'suqad' => 'Suqad',
-                    'squad-fpp' => 'Squad FPP',
-            );
-            echo '
-                <div style="background-color:#FFBF00; padding:10px;">
-                    <div style="float:left;"><strong>'.$mode[$gamemode].'</strong></div>
-                    <div style="float:right;">'.$roundsPlayed.' Games</div>
-                    <div style="clear:both;"></div>
-                </div>
-                <div style="text-align:center;">
-                    <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
-                    <img src="'.plugin_dir_url(__FILE__).'/gfx/'.strtolower($rank).'.png" width="120">
-                    <p style="padding:5px;"><strong>'.$rank.'</strong></p>
-                </div>
-                <table>
-                    <tr>
-                        <th>Points: </th><td>'.$rankPoints.'</td>
-                    </tr>
-                    <tr>
-                        <th>Rounds won: </th><td>'.$wins.' <span style="font-size:0.8em;">('.$winRatio.'%)</span></td>
-                    </tr>
-                    <tr>
-                        <th>Rounds Top10: </th><td>'.$top10s.' <span style="font-size:0.8em;">('.$top10sRatio.'%)</span></td>
-                    </tr>
-                    <tr>
-                        <th>Kills: </th><td>'.$kills.' <span style="font-size:0.8em;">(K/D: '.$kdRatio.')</span></td>
-                    </tr>
-                    <tr>
-                        <th>Headshots: </th><td>'.$headshotKills.' <span style="font-size:0.8em;">('.$headshotRatio.'%)</span></td>
-                    </tr>
-                    <tr>
-                        <th>Most kills per Round: </th><td>'.$roundMostKills.'</td>
-                    </tr>
-                </table>
-            ';
+                $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
+                $wins = $json['data']['attributes']['gameModeStats'][$gamemode]['wins'];
+                $top10s = $json['data']['attributes']['gameModeStats'][$gamemode]['top10s'];
+                $kills = $json['data']['attributes']['gameModeStats'][$gamemode]['kills'];
+                $headshotKills = $json['data']['attributes']['gameModeStats'][$gamemode]['headshotKills'];
+                $losses = $json['data']['attributes']['gameModeStats'][$gamemode]['losses'];
+                $roundMostKills = $json['data']['attributes']['gameModeStats'][$gamemode]['roundMostKills'];
+                $roundsPlayed = $json['data']['attributes']['gameModeStats'][$gamemode]['roundsPlayed'];
+
+                $winRatio = round($wins/$roundsPlayed*100,2);
+                $top10sRatio = round($top10s/$roundsPlayed*100,2);
+                $headshotRatio = round($headshotKills/$kills*100,2);
+                $kdRatio = round($kills/$losses,2);
+                $rank = wpubg_getRank($rankPoints);
+                
+                //open widget div
+                echo '<div class="widget-text wp_widget_plugin_box">';
+                
+                //show widget title
+                if ( $title ) {
+                    echo $before_title . $title . $after_title;
+                }
+                
+                //here goes the beatuy stuff
+                $gamemodes = array (
+                        'solo' => 'Solo',
+                        'solo-fpp' => 'Solo FPP',
+                        'duo' => 'Duo',
+                        'duo-fpp' => 'Duo FPP',
+                        'suqad' => 'Suqad',
+                        'squad-fpp' => 'Squad FPP',
+                );
+
+                $regions = array(
+                    'pc-eu' => __( 'PC EU', 'text_domain' ),
+                    'pc-jp' => __( 'PC JP', 'text_domain' ),
+                    'pc-krjp' => __( 'PC KRJP', 'text_domain' ),
+                    'pc-kakao' => __( 'PC KaKao', 'text_domain' ),
+                    'pc-na' => __( 'PC NA', 'text_domain' ),
+                    'pc-oc' => __( 'PC OC', 'text_domain' ),
+                    'pc-ru' => __( 'PC RU', 'text_domain' ),
+                    'pc-sea' => __( 'PC SEA', 'text_domain' ),
+                    'xbox-as' => __( 'XBOX AS', 'text_domain' ),
+                    'xbox-eu' => __( 'XBOX EU', 'text_domain' ),
+                    'xbox-na' => __( 'XBOX NA', 'text_domain' ),
+                    'xbox-oc' => __( 'XBOX OC', 'text_domain' ),
+                    'xbox-sa' => __( 'XBOX SA', 'text_domain' )
+                );
+                echo '
+                    <div style="background-color:#FFBF00; padding:10px;">
+                        <div style="float:left;"><strong>'.$gamemodes[$gamemode].'</strong> <span style="font-size:0.8em;">('.$regions[$region].')</span></div>
+                        <div style="float:right;">'.$roundsPlayed.' Games</div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="text-align:center;">
+                        <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
+                        <img src="'.plugin_dir_url(__FILE__).'/gfx/'.strtolower($rank).'.png" width="120">
+                        <p style="padding:5px;"><strong>'.$rank.'</strong></p>
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Points: </th><td>'.$rankPoints.'</td>
+                        </tr>
+                        <tr>
+                            <th>Rounds won: </th><td>'.$wins.' <span style="font-size:0.8em;">('.$winRatio.'%)</span></td>
+                        </tr>
+                        <tr>
+                            <th>Rounds Top10: </th><td>'.$top10s.' <span style="font-size:0.8em;">('.$top10sRatio.'%)</span></td>
+                        </tr>
+                        <tr>
+                            <th>Kills: </th><td>'.$kills.' <span style="font-size:0.8em;">(K/D: '.$kdRatio.')</span></td>
+                        </tr>
+                        <tr>
+                            <th>Headshots: </th><td>'.$headshotKills.' <span style="font-size:0.8em;">('.$headshotRatio.'%)</span></td>
+                        </tr>
+                        <tr>
+                            <th>Most kills per Round: </th><td>'.$roundMostKills.'</td>
+                        </tr>
+                    </table>
+                ';
 
 
-            /*echo "Player ID is: ".$player."<br>";
-            echo "API-URL is: ".$url;
-            echo "<br>RankPoints for Squad-FPP are: ".$rankPoints."<br>";
-            echo "Your rank is: ".getRank($rankPoints);*/
-            
-            
-            //close widget div
-            echo '</div>';
-            
-            // WordPress core after_widget hook (always include )
-            echo $after_widget;
+                /*echo "Player ID is: ".$player."<br>";
+                echo "API-URL is: ".$url;
+                echo "<br>RankPoints for Squad-FPP are: ".$rankPoints."<br>";
+                echo "Your rank is: ".getRank($rankPoints);*/
+                
+                
+                //close widget div
+                echo '</div>';
+                
+                // WordPress core after_widget hook (always include )
+                echo $after_widget;
+            } else {
+                 //open widget div
+                echo '<div class="widget-text wp_widget_plugin_box">';
+                
+                //show widget title
+                if ( $title ) {
+                    echo $before_title . $title . $after_title;
+                }
+
+                echo "<h3>Whoops!</h3><strong>Could not connect to API</strong>";
+
+                //close widget div
+                echo '</div>';
+                
+                // WordPress core after_widget hook (always include )
+                echo $after_widget;
+            }    
         } else {
             //open widget div
             echo '<div class="widget-text wp_widget_plugin_box">';
