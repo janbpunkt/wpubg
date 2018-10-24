@@ -35,4 +35,27 @@ function wpubg_getRank ($points) {
 	return $rank;
 }
 
+
+function wpubg_error ($msg) {
+	// WordPress core before_widget hook (always include )
+	echo $before_widget;
+
+	//open widget div
+	echo '<div class="widget-text wp_widget_plugin_box">';
+                
+	//show widget title
+	if ( $title ) {
+		echo $before_title . $title . $after_title;
+	}
+
+	echo "<h3>Whoops!</h3>".$msg;
+
+	//close widget div
+	echo '</div>';
+	  
+	// WordPress core after_widget hook (always include )
+	echo $after_widget;
+
+}
+
 ?>

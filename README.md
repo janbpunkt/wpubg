@@ -29,6 +29,9 @@ Keep this in mind regarding GDPR/DSGVO.
 3. no caching yet
 
 ## Changelog
+# 0.5
+* first version of caching (there shouldn't be any API timeout from now on)
+
 # 0.41
 * bugfixes
 

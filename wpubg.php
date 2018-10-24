@@ -3,7 +3,7 @@
 Plugin Name: WPUBG
 Plugin URI: https://janbpunkt.de/wpubg
 Description: Display your PUBG stats of the current season as a widget.
-Version: 0.41
+Version: 0.5
 Author: Jan B-Punkt
 Author URI: https://janbpunkt.de
 License: GNU General Public License v3.0
@@ -137,7 +137,7 @@ class WPUBG_Widget extends WP_Widget {
         $player     = isset( $instance['player'] ) ? $instance['player'] : '';
         $apikey     = isset( $instance['apikey'] ) ? $instance['apikey'] : '';
         $gamemode   = isset( $instance['gamemode'] ) ? $instance['gamemode'] : '';
-        $region   = isset( $instance['region'] ) ? $instance['region'] : '';
+        $region     = isset( $instance['region'] ) ? $instance['region'] : '';
     
         // WordPress core before_widget hook (always include )
         echo $before_widget;
@@ -145,158 +145,119 @@ class WPUBG_Widget extends WP_Widget {
         // Display the widget
         include "wpubg_functions.php";
         
-        //find current season - easier code possible
-        $url = "https://api.pubg.com/shards/steam/seasons";
-        $result = wpubg_getData ($url, $apikey);
-      
-        if (!empty($result)) {
+        /*
+        Find the current season
+        First we check if there's a cached value for the current season
+        If not, we're going to ask the API
+        */
+        $session_transient = get_transient('wpubg_seasonID');
+        if (!empty($session_transient)) {
+            //Cached value available -> let's use it
+            $seasonID = get_transient('wpubg_seasonID');
+        } else {
+            //No cached values -> get fresh data from API
+            $url = "https://api.pubg.com/shards/steam/seasons";
+            $result = wpubg_getData ($url, $apikey);
         
-            //var_dump ($result);
-            
-            $json = json_decode($result, true);
-            $seasons[] = $json;
-            foreach ($seasons as $season) {
-                foreach ($season as $item) {
-                    foreach ($item as $data) {
-                        if ($data['attributes']['isCurrentSeason'] == "1") {
-                            $seasonID = $data['id'];
+            if (!empty($result)) {
+                //If there's a response from the API, we can iterate through the array and find the current season and save it as a transient
+                
+                $json = json_decode($result, true);
+                $seasons[] = $json;
+                foreach ($seasons as $season) {
+                    foreach ($season as $item) {
+                        foreach ($item as $data) {
+                            if ($data['attributes']['isCurrentSeason'] == "1") {
+                                $seasonID = $data['id'];
 
-                            break 2;
+                                //save seasonID as transient for X minutes
+                                set_transient('wpubg_seasonID',$seasonID,5*MINUTE_IN_SECONDS);
+                                break 2;
+                            }
                         }
+
                     }
-
                 }
+            } else {
+                //No or unknown answer -> throw an error
+                $error_msg = "There was an error while trying to fetch the season ID from the PUBG API.<br>Please try again in 5 minutes.";
+                wpubg_error ($error_msg);
             }
+        }
 
-            //get player id
+
+        /*
+        Let's get the playerID
+        First we check if there's a cached value for it
+        If not, we're going to ask the API
+        */
+        $player_transient = get_transient('wpubg_playerID');
+        if (!empty($player_transient)) {
+            //Cached value available -> let's use it
+            $playerID = get_transient('wpubg_playerID');
+        } else {
+            //No cached values -> get fresh data from API
             $url = "https://api.pubg.com/shards/".$region."/players?filter[playerNames]=".$instance['player'];
             $result = wpubg_getData($url, $apikey);
 
             if (!empty($result)) {
-                
-                //var_dump($result);
+                //If there's a response from the API, we can get the player ID and save it as a transient
                 
                 $json = json_decode($result,true);
-                //print_r ($json);
                 $playerID =  $json['data'][0]['id'];
-                
 
-                //get stats for the player from current season  
-                $url = "https://api.pubg.com/shards/steam/players/".$playerID."/seasons/".$seasonID;
-                $result = wpubg_getData ($url, $apikey);
-                $json = json_decode($result, true);
-
-                $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
-                $wins = $json['data']['attributes']['gameModeStats'][$gamemode]['wins'];
-                $top10s = $json['data']['attributes']['gameModeStats'][$gamemode]['top10s'];
-                $kills = $json['data']['attributes']['gameModeStats'][$gamemode]['kills'];
-                $headshotKills = $json['data']['attributes']['gameModeStats'][$gamemode]['headshotKills'];
-                $losses = $json['data']['attributes']['gameModeStats'][$gamemode]['losses'];
-                $roundMostKills = $json['data']['attributes']['gameModeStats'][$gamemode]['roundMostKills'];
-                $roundsPlayed = $json['data']['attributes']['gameModeStats'][$gamemode]['roundsPlayed'];
-
-                $winRatio = round($wins/$roundsPlayed*100,2);
-                $top10sRatio = round($top10s/$roundsPlayed*100,2);
-                $headshotRatio = round($headshotKills/$kills*100,2);
-                $kdRatio = round($kills/$losses,2);
-                $rank = wpubg_getRank($rankPoints);
-                
-                //open widget div
-                echo '<div class="widget-text wp_widget_plugin_box">';
-                
-                //show widget title
-                if ( $title ) {
-                    echo $before_title . $title . $after_title;
-                }
-                
-                //here goes the beatuy stuff
-                $gamemodes = array (
-                        'solo' => 'Solo',
-                        'solo-fpp' => 'Solo FPP',
-                        'duo' => 'Duo',
-                        'duo-fpp' => 'Duo FPP',
-                        'suqad' => 'Suqad',
-                        'squad-fpp' => 'Squad FPP',
-                );
-
-                $regions = array(
-                    'pc-eu' => __( 'PC EU', 'text_domain' ),
-                    'pc-jp' => __( 'PC JP', 'text_domain' ),
-                    'pc-krjp' => __( 'PC KRJP', 'text_domain' ),
-                    'pc-kakao' => __( 'PC KaKao', 'text_domain' ),
-                    'pc-na' => __( 'PC NA', 'text_domain' ),
-                    'pc-oc' => __( 'PC OC', 'text_domain' ),
-                    'pc-ru' => __( 'PC RU', 'text_domain' ),
-                    'pc-sea' => __( 'PC SEA', 'text_domain' ),
-                    'xbox-as' => __( 'XBOX AS', 'text_domain' ),
-                    'xbox-eu' => __( 'XBOX EU', 'text_domain' ),
-                    'xbox-na' => __( 'XBOX NA', 'text_domain' ),
-                    'xbox-oc' => __( 'XBOX OC', 'text_domain' ),
-                    'xbox-sa' => __( 'XBOX SA', 'text_domain' )
-                );
-                echo '
-                    <div style="background-color:#FFBF00; padding:10px;">
-                        <div style="float:left;"><strong>'.$gamemodes[$gamemode].'</strong> <span style="font-size:0.8em;">('.$regions[$region].')</span></div>
-                        <div style="float:right;">'.$roundsPlayed.' Games</div>
-                        <div style="clear:both;"></div>
-                    </div>
-                    <div style="text-align:center;">
-                        <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
-                        <img src="'.plugin_dir_url(__FILE__).'gfx/'.strtolower($rank).'.png" width="120">
-                        <p style="padding:5px;"><strong>'.$rank.'</strong></p>
-                    </div>
-                    <table>
-                        <tr>
-                            <th>Points: </th><td>'.$rankPoints.'</td>
-                        </tr>
-                        <tr>
-                            <th>Rounds won: </th><td>'.$wins.' <span style="font-size:0.8em;">('.$winRatio.'%)</span></td>
-                        </tr>
-                        <tr>
-                            <th>Rounds Top10: </th><td>'.$top10s.' <span style="font-size:0.8em;">('.$top10sRatio.'%)</span></td>
-                        </tr>
-                        <tr>
-                            <th>Kills: </th><td>'.$kills.' <span style="font-size:0.8em;">(K/D: '.$kdRatio.')</span></td>
-                        </tr>
-                        <tr>
-                            <th>Headshots: </th><td>'.$headshotKills.' <span style="font-size:0.8em;">('.$headshotRatio.'%)</span></td>
-                        </tr>
-                        <tr>
-                            <th>Most kills per Round: </th><td>'.$roundMostKills.'</td>
-                        </tr>
-                    </table>
-                ';
-
-
-                /*echo "Player ID is: ".$player."<br>";
-                echo "API-URL is: ".$url;
-                echo "<br>RankPoints for Squad-FPP are: ".$rankPoints."<br>";
-                echo "Your rank is: ".getRank($rankPoints);*/
-                
-                
-                //close widget div
-                echo '</div>';
-                
-                // WordPress core after_widget hook (always include )
-                echo $after_widget;
+                //save playerID as transient for X minutes
+                set_transient('wpubg_playerID',$playerID,5*MINUTE_IN_SECONDS);
             } else {
-                 //open widget div
-                echo '<div class="widget-text wp_widget_plugin_box">';
-                
-                //show widget title
-                if ( $title ) {
-                    echo $before_title . $title . $after_title;
-                }
+                //No or unknown answer -> throw an error
+                $error_msg = "There was an error while trying to fetch the player ID from the PUBG API.<br>Please try again in 5 minutes.";
+                wpubg_error ($error_msg);
+            }
+        }
 
-                echo "<h3>Whoops!</h3><strong>Could not connect to API</strong>";
 
-                //close widget div
-                echo '</div>';
-                
-                // WordPress core after_widget hook (always include )
-                echo $after_widget;
-            }    
+        /*
+        Let's get the season stats
+        First we check if there's a cached value for it
+        If not, we're going to ask the API
+        */
+        $stats_transient = get_transient('wpubg_stats');
+        if (!empty($stats_transient)) {
+            //Cached value available -> let's use it
+            $json = get_transient('wpubg_stats');
         } else {
+        
+            //get stats for the player from current season  
+            $url = "https://api.pubg.com/shards/steam/players/".$playerID."/seasons/".$seasonID;
+            $result = wpubg_getData ($url, $apikey);
+            
+            if (!empty($result)) {
+
+                //save playerID as transient for X minutes
+                $json = json_decode($result, true);
+                set_transient('wpubg_stats',$json,5*MINUTE_IN_SECONDS);               
+            } else {
+                //No or unknown answer -> throw an error
+                $error_msg = "There was an error while trying to fetch the season stats from the PUBG API.<br>Please try again in 5 minutes.";
+                wpubg_error ($error_msg);
+            }   
+        }    
+        if (empty($error_msg)) {
+            $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
+            $wins = $json['data']['attributes']['gameModeStats'][$gamemode]['wins'];
+            $top10s = $json['data']['attributes']['gameModeStats'][$gamemode]['top10s'];
+            $kills = $json['data']['attributes']['gameModeStats'][$gamemode]['kills'];
+            $headshotKills = $json['data']['attributes']['gameModeStats'][$gamemode]['headshotKills'];
+            $losses = $json['data']['attributes']['gameModeStats'][$gamemode]['losses'];
+            $roundMostKills = $json['data']['attributes']['gameModeStats'][$gamemode]['roundMostKills'];
+            $roundsPlayed = $json['data']['attributes']['gameModeStats'][$gamemode]['roundsPlayed'];
+
+            $winRatio = round($wins/$roundsPlayed*100,2);
+            $top10sRatio = round($top10s/$roundsPlayed*100,2);
+            $headshotRatio = round($headshotKills/$kills*100,2);
+            $kdRatio = round($kills/$losses,2);
+            $rank = wpubg_getRank($rankPoints);
+            
             //open widget div
             echo '<div class="widget-text wp_widget_plugin_box">';
             
@@ -304,17 +265,73 @@ class WPUBG_Widget extends WP_Widget {
             if ( $title ) {
                 echo $before_title . $title . $after_title;
             }
+            
+            //here goes the beatuy stuff
+            $gamemodes = array (
+                    'solo' => 'Solo',
+                    'solo-fpp' => 'Solo FPP',
+                    'duo' => 'Duo',
+                    'duo-fpp' => 'Duo FPP',
+                    'suqad' => 'Suqad',
+                    'squad-fpp' => 'Squad FPP',
+            );
 
-            echo "<h3>Whoops!</h3><strong>Could not connect to API</strong>";
-
+            $regions = array(
+                'pc-eu' => __( 'PC EU', 'text_domain' ),
+                'pc-jp' => __( 'PC JP', 'text_domain' ),
+                'pc-krjp' => __( 'PC KRJP', 'text_domain' ),
+                'pc-kakao' => __( 'PC KaKao', 'text_domain' ),
+                'pc-na' => __( 'PC NA', 'text_domain' ),
+                'pc-oc' => __( 'PC OC', 'text_domain' ),
+                'pc-ru' => __( 'PC RU', 'text_domain' ),
+                'pc-sea' => __( 'PC SEA', 'text_domain' ),
+                'xbox-as' => __( 'XBOX AS', 'text_domain' ),
+                'xbox-eu' => __( 'XBOX EU', 'text_domain' ),
+                'xbox-na' => __( 'XBOX NA', 'text_domain' ),
+                'xbox-oc' => __( 'XBOX OC', 'text_domain' ),
+                'xbox-sa' => __( 'XBOX SA', 'text_domain' )
+            );
+            echo '
+                <div style="background-color:#FFBF00; padding:10px;">
+                    <div style="float:left;"><strong>'.$gamemodes[$gamemode].'</strong> <span style="font-size:0.8em;">('.$regions[$region].')</span></div>
+                    <div style="float:right;">'.$roundsPlayed.' Games</div>
+                    <div style="clear:both;"></div>
+                </div>
+                <div style="text-align:center;">
+                    <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
+                    <img src="'.plugin_dir_url(__FILE__).'gfx/'.strtolower($rank).'.png" width="120">
+                    <p style="padding:5px;"><strong>'.$rank.'</strong></p>
+                </div>
+                <table>
+                    <tr>
+                        <th>Points: </th><td>'.$rankPoints.'</td>
+                    </tr>
+                    <tr>
+                        <th>Rounds won: </th><td>'.$wins.' <span style="font-size:0.8em;">('.$winRatio.'%)</span></td>
+                    </tr>
+                    <tr>
+                        <th>Rounds Top10: </th><td>'.$top10s.' <span style="font-size:0.8em;">('.$top10sRatio.'%)</span></td>
+                    </tr>
+                    <tr>
+                        <th>Kills: </th><td>'.$kills.' <span style="font-size:0.8em;">(K/D: '.$kdRatio.')</span></td>
+                    </tr>
+                    <tr>
+                        <th>Headshots: </th><td>'.$headshotKills.' <span style="font-size:0.8em;">('.$headshotRatio.'%)</span></td>
+                    </tr>
+                    <tr>
+                        <th>Most kills per Round: </th><td>'.$roundMostKills.'</td>
+                    </tr>
+                </table>
+            ';
+            
             //close widget div
             echo '</div>';
             
             // WordPress core after_widget hook (always include )
-            echo $after_widget;
-        }
-
-        
+            echo $after_widget;  
+        } else {
+            //else
+        }    
     }
 }
 
