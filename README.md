@@ -32,4 +32,17 @@ https://developer.pubg.com/tos?locale=en
 1. no error catching yet
 2. PUBG-API only allows 10 requests per minute as a default (you can request higher amounts on https://developer.pubg.com)
 3. no caching yet
-4. not able to choose region
+
+## Changelog
+# 0.4
+* frist version of error catching
+
+# 0.3
+* added regions (you must select your region immediately after updating the plugin)
+
+# 0.2
+* added screenshots to readme.txt
+* The field "gamemode" now shows the last saved value
+ 
+# 0.1
+* first deploy of the plugin
