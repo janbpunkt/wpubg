@@ -14,9 +14,9 @@ function wpubg_getData ($url, $apikey) {
 
 function wpubg_getRank ($points) {
 	if ($points == 0) {
-        	$rank = "Unranked";
-    	} else if ($points > 0 && $points < 1399) {
-       		$rank = "Bronze";
+		$rank = "Unranked";
+	} else if ($points > 0 && $points < 1399) {
+		$rank = "Bronze";
 	} else if ($points >=1400 && $points <=1499) {
 		$rank = "Silver";
 	} else if ($points >=1500 && $points <=1599) {
