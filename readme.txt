@@ -40,11 +40,6 @@ https://developer.pubg.com/tos?locale=en
 4. fill out all fields
 5. save
 
-== Known issues == 
-1. no error catching yet
-2. PUBG-API only allows 10 requests per minute as a default (you can request higher amounts on https://developer.pubg.com)
-3. no caching yet
-
 == Screenshots ==
 1. That's how it will look live
 2. The backend

@@ -23,11 +23,6 @@ Keep this in mind regarding GDPR/DSGVO.
 5. save
 6. test
 
-## Known issues / to do
-1. no error catching yet
-2. PUBG-API only allows 10 requests per minute as a default (you can request higher amounts on https://developer.pubg.com)
-3. no caching yet
-
 ## Changelog
 # 0.5
 * first version of caching (there shouldn't be any API timeout from now on)

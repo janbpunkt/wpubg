@@ -150,8 +150,8 @@ class WPUBG_Widget extends WP_Widget {
         First we check if there's a cached value for the current season
         If not, we're going to ask the API
         */
-        $session_transient = get_transient('wpubg_seasonID');
-        if (!empty($session_transient)) {
+        $season_transient = get_transient('wpubg_seasonID');
+        if (!empty($season_transient)) {
             //Cached value available -> let's use it
             $seasonID = get_transient('wpubg_seasonID');
         } else {
