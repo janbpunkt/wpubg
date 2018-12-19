@@ -3,7 +3,7 @@
 Plugin Name: WPUBG
 Plugin URI: https://janbpunkt.de/wpubg
 Description: Display your PUBG stats of the current season as a widget.
-Version: 0.5
+Version: 0.6
 Author: Jan B-Punkt
 Author URI: https://janbpunkt.de
 License: GNU General Public License v3.0
@@ -131,7 +131,7 @@ class WPUBG_Widget extends WP_Widget {
     public function widget( $args, $instance ) {
 
         extract( $args );
-
+        delete_transient('wpubg_seasonID');
         // Check the widget options
         $title      = isset( $instance['title'] ) ? apply_filters( 'widget_title', $instance['title'] ) : '';
         $player     = isset( $instance['player'] ) ? $instance['player'] : '';
@@ -243,7 +243,7 @@ class WPUBG_Widget extends WP_Widget {
             }   
         }    
         if (empty($error_msg)) {
-            $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['bestRankPoint'],0);
+            $rankPoints = round($json['data']['attributes']['gameModeStats'][$gamemode]['rankPoints'],0);
             $wins = $json['data']['attributes']['gameModeStats'][$gamemode]['wins'];
             $top10s = $json['data']['attributes']['gameModeStats'][$gamemode]['top10s'];
             $kills = $json['data']['attributes']['gameModeStats'][$gamemode]['kills'];
@@ -256,7 +256,10 @@ class WPUBG_Widget extends WP_Widget {
             $top10sRatio = round($top10s/$roundsPlayed*100,2);
             $headshotRatio = round($headshotKills/$kills*100,2);
             $kdRatio = round($kills/$losses,2);
-            $rank = wpubg_getRank($rankPoints);
+
+
+            $rankPointsTitle = $json['data']['attributes']['gameModeStats'][$gamemode]['rankPointsTitle'];
+            $rank = wpubg_getRank($rankPointsTitle);
             
             //open widget div
             echo '<div class="widget-text wp_widget_plugin_box">';
@@ -299,7 +302,7 @@ class WPUBG_Widget extends WP_Widget {
                 </div>
                 <div style="text-align:center;">
                     <p style="padding:5px;"><h3 style="margin:0px;padding:0px;">'.$player.'</h3></p>
-                    <img src="'.plugin_dir_url(__FILE__).'gfx/'.strtolower($rank).'.png" width="120">
+                    <img src="'.plugin_dir_url(__FILE__).'gfx/'.strtolower(explode(" ",$rank)[0]).'.png" width="120">
                     <p style="padding:5px;"><strong>'.$rank.'</strong></p>
                 </div>
                 <table>
